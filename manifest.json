@@ -1,0 +1,35 @@
+﻿{
+  "name": "一键校园网",
+  "version": "1.0.0",
+  "manifest_version": 2,
+  "description": "告别“上网不涉密”界面！",
+  "icons": {
+    "16": "image/icon.png",
+    "48": "image/icon.png"
+  },
+  "default_locale": "en",
+  "permissions": [
+    "http://*/*",
+    "https://*/*",
+    "tabs"
+  ],
+  // 应对浏览器安全策略
+  "content_security_policy":"script-src 'self'; object-src 'self'",
+  "web_accessible_resources": [
+    "image/*",
+    "script/*",
+    "html/*"],
+
+  //选项页
+  "options_page":"html/options.html",
+  
+  //后台页
+  "background":{"scripts":[
+    "script/jquery.js","script/bkg_gw.js"]},
+  
+  // 浏览器小图表部分
+  "browser_action": {
+    "default_title": "一键校园网",
+    "default_icon": "image/icon.png"
+  }
+}
