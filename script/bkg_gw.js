@@ -148,17 +148,15 @@ else pwB="";
 chrome.browserAction.onClicked.addListener(
 	function(tab) {
 		if(!NetError){
-	  		switchNet();
+	  		switchNet(0);
 		}
   //console.log(sender.tab ?"from a content script:" + sender.tab.url : "from the extension");
 	}
 );
-//setTimeout(function(){regCheck()},5000);
 if(window.localStorage["auto"]=="true"){
-	switchNet();
+	switchNet(1);
 }
 else check();
-regCheck();
 
 //控制显示
 function checkOn(){
@@ -171,7 +169,8 @@ function checkOff(){
 	chrome.browserAction.setTitle({title:"已断开校园网"});
 	NetState=false;
 }
-//判断能否连接到服务器
+//判断状态
+//每30秒查询一次
 function check(){
 	console.log("check");
 	$.ajax({type: "post",
@@ -192,21 +191,18 @@ function check(){
 					}
 				}
 				else checkOff();
+				setTimeout(function(){check();},30000);
 			},
 			error:function(e){
 				NetError=true;
 				chrome.browserAction.setIcon({path:"../image/NetError.png"});
 				chrome.browserAction.setTitle({title:"ERROR: 无法连接到服务器"});
+				setTimeout(function(){check();},30000);
 			}
 	});
 }
-//每10秒查询一次
-function regCheck(){
-	check();
-	setTimeout(function(){regCheck();},10000);
-}
 //仅在网络正常时执行,切换状态
-function switchNet(){
+function switchNet(isInit){//isInit->初次运行，在回调中开始check循环
 	console.log("switch--NetError:"+NetError+", NetState:"+NetState);
 	data={
 			action: "login",
@@ -233,11 +229,13 @@ function switchNet(){
 					if(!NetState)checkOn();
 					else checkOff();
 				}
+				if(isInit)setTimeout(function(){check();},30000);
 			},
 			error:function(e){
 				chrome.browserAction.setIcon({path:"../image/NetError.png"});
 				chrome.browserAction.setTitle({title:"ERROR: 无法连接到服务器"});
 				NetState=false;
+				if(isInit)setTimeout(function(){check();},30000);
 			}
 		}
 	);
