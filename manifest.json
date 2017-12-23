@@ -15,13 +15,14 @@
   ],
   // 应对浏览器安全策略
   "content_security_policy":"script-src 'self'; object-src 'self'",
-  "web_accessible_resources": [
+  "web_accessible_resources":[
     "image/*",
     "script/*",
     "html/*"],
 
-  //选项页
-  "options_page":"html/options.html",
+  //选项页page->ui:从新建标签页改为弹窗
+  //"options_page":"html/options.html",
+  "options_ui":{"page":"html/options.html"},
   
   //后台页
   "background":{"scripts":[

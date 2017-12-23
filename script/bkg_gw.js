@@ -136,8 +136,9 @@ function base64decode(str) {
 }
 
 //初始化信息
-NetState=false;//ture:连上，false:断开
+isLoggedin=false;//ture:连上，false:断开
 NetError=false;//false:无法连接服务器
+infError=false;//false:信息有误
 userid=window.localStorage["ID"];
 pw=window.localStorage["PW"];
 if(window.localStorage["PW"]!=undefined){
@@ -159,38 +160,41 @@ if(window.localStorage["auto"]=="true"){
 else check();
 
 //控制显示
-function checkOn(){
+function showOn(){
 	chrome.browserAction.setIcon({path:"../image/NetOn.png"});
 	chrome.browserAction.setTitle({title:"已连上校园网"});
-	NetState=true;
+	isLoggedin=true;
 }
-function checkOff(){
+function showOff(){
 	chrome.browserAction.setIcon({path:"../image/NetOff.png"});
 	chrome.browserAction.setTitle({title:"已断开校园网"});
-	NetState=false;
+	isLoggedin=false;
 }
 //判断状态
 //每30秒查询一次
 function check(){
-	console.log("check");
+	if(infError)return;
+	//console.log("check");
 	$.ajax({type: "post",
 			url: "https://gw.buaa.edu.cn:801/beihangview.php", 
 			data: {},
-			async : false,
+			//async : false,
 			success: function(res) {
+				console.log("\n----------regular check:----------\n"+res+'\n');
 				NetError=false;
 				//console.log(res);
 				if(/自服务窗口/.test(res)){
 					var getId;
 					getId=res.split("user_name=",2)[1].substring(0,8);
-					if(getId===userid) checkOn();
+					if(getId===userid) showOn();
 					else{
 						chrome.browserAction.setIcon({path:"../image/NetError.png"});
 						chrome.browserAction.setTitle({title:"ERROR: 请在设置页正确填写信息"});
-						NetState=false;
+						infError=true;
+						isLoggedin=false;
 					}
 				}
-				else checkOff();
+				else showOff();
 				setTimeout(function(){check();},30000);
 			},
 			error:function(e){
@@ -203,7 +207,6 @@ function check(){
 }
 //仅在网络正常时执行,切换状态
 function switchNet(isInit){//isInit->初次运行，在回调中开始check循环
-	console.log("switch--NetError:"+NetError+", NetState:"+NetState);
 	data={
 			action: "login",
 			username: userid,
@@ -211,7 +214,7 @@ function switchNet(isInit){//isInit->初次运行，在回调中开始check循�
 			ajax: 1,
 			ac_id: 1
 		}
-	if(NetState){
+	if(isLoggedin){
 		data.action="logout";
 		data.password=pw;}
 	$.ajax({type:"POST",
@@ -219,22 +222,23 @@ function switchNet(isInit){//isInit->初次运行，在回调中开始check循�
 			data:data,
 			success:function(res){
 				console.log(res);
-				if(/^(E|请)/.test(res)){
+				if(/(^E|请)/.test(res)){
 					//在某处显示错误
 					chrome.browserAction.setIcon({path:"../image/NetError.png"});
 					chrome.browserAction.setTitle({title:"ERROR: 请在设置页正确填写信息"});
-					NetState=false;
+					infError=true;
+					isLoggedin=false;
 				}
 				else{
-					if(!NetState)checkOn();
-					else checkOff();
+					if(!isLoggedin)showOn();
+					else showOff();
 				}
 				if(isInit)setTimeout(function(){check();},30000);
 			},
 			error:function(e){
 				chrome.browserAction.setIcon({path:"../image/NetError.png"});
 				chrome.browserAction.setTitle({title:"ERROR: 无法连接到服务器"});
-				NetState=false;
+				isLoggedin=false;
 				if(isInit)setTimeout(function(){check();},30000);
 			}
 		}
